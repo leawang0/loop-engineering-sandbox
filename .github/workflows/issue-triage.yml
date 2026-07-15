@@ -37,17 +37,17 @@ jobs:
 
       # --- Agent step: INERT until you add the ANTHROPIC_API_KEY secret. ---
       # Uncomment to activate. Runs one L1 triage pass and rewrites the state file.
-      # - name: Run issue-triage loop (L1)
-      #   uses: anthropics/claude-code-action@v1
-      #   with:
-      #     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-      #     prompt: |
-      #       Run one pass of the issue-triage skill in .claude/skills/issue-triage/SKILL.md.
-      #       Read issues.json and prs.json. Rewrite issue-triage-state.md and append one
-      #       block to loop-run-log.md. L1: propose only, never apply labels, escalate
-      #       P0/P1/security/breaking-change to the "Needs human" bucket.
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run issue-triage loop (L1)
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Run one pass of the issue-triage skill in .claude/skills/issue-triage/SKILL.md.
+            Read issues.json and prs.json. Rewrite issue-triage-state.md and append one
+            block to loop-run-log.md. L1: propose only, never apply labels, escalate
+            P0/P1/security/breaking-change to the "Needs human" bucket.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload triage state as artifact
         uses: actions/upload-artifact@v4
