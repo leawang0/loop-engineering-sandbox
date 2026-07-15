@@ -1,0 +1,58 @@
+name: issue-triage-loop
+
+# The heartbeat lives HERE, not in /loop. GitHub is the clock, so each trigger
+# runs a SINGLE triage pass (not a self-rescheduling loop).
+on:
+  schedule:
+    - cron: '13 */2 * * 1-5'   # every 2h at :13, weekdays, UTC
+  workflow_dispatch: {}          # manual "Run workflow" button
+  issues:
+    types: [opened, reopened, labeled]
+
+# L1 = report-only. Read-only token is the REAL enforcement of the level gate.
+# To graduate to L2, change `issues: read` -> `issues: write` (line below) AND
+# enable auto-apply on the allowlist in .claude/skills/issue-triage/SKILL.md.
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gather open issues and PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "### Open issues" >> $GITHUB_STEP_SUMMARY
+          gh issue list --state open --limit 50 \
+            --json number,title,labels,createdAt >> issues.json
+          gh pr list --state open --limit 50 \
+            --json number,title,author,updatedAt >> prs.json
+          cat issues.json
+
+      # --- Agent step: INERT until you add the ANTHROPIC_API_KEY secret. ---
+      # Uncomment to activate. Runs one L1 triage pass and rewrites the state file.
+      # - name: Run issue-triage loop (L1)
+      #   uses: anthropics/claude-code-action@v1
+      #   with:
+      #     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+      #     prompt: |
+      #       Run one pass of the issue-triage skill in .claude/skills/issue-triage/SKILL.md.
+      #       Read issues.json and prs.json. Rewrite issue-triage-state.md and append one
+      #       block to loop-run-log.md. L1: propose only, never apply labels, escalate
+      #       P0/P1/security/breaking-change to the "Needs human" bucket.
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload triage state as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-triage-state
+          path: |
+            issue-triage-state.md
+            loop-run-log.md
