@@ -42,7 +42,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: claude-code   # gateway auto-routes this alias to a backing model
+          claude_args: "--model claude-code"   # gateway auto-routes this alias
           prompt: |
             Run one pass of the issue-triage skill in .claude/skills/issue-triage/SKILL.md.
             Read issues.json and prs.json. Rewrite issue-triage-state.md and append one
