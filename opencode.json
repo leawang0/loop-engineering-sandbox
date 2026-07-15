@@ -1,0 +1,30 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "aiohub": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "aiohub gateway",
+      "options": {
+        "baseURL": "https://api.aiohub.org/v1",
+        "apiKey": "{env:AIOHUB_API_KEY}"
+      },
+      "models": {
+        "gpt-4o": {
+          "name": "GPT-4o (via aiohub)"
+        }
+      }
+    }
+  },
+  "agent": {
+    "issue-triage": {
+      "name": "issue-triage",
+      "description": "L1 issue triage. Reads state, scans open issues/PRs, proposes labels and priorities. Propose-only.",
+      "mode": "primary",
+      "prompt": "Read AGENTS.md, LOOP.md, issue-triage-state.md, and .claude/skills/issue-triage/SKILL.md. Use issues.json and prs.json as the signal source. Rewrite issue-triage-state.md with Top 5, suggested labels (allowlist only), a Needs-human bucket, and Noise. Append one block to loop-run-log.md. L1: propose only — never apply labels, never close issues. Escalate P0/P1/security/breaking-change to Needs-human.",
+      "permission": {
+        "bash": "deny",
+        "edit": "allow"
+      }
+    }
+  }
+}

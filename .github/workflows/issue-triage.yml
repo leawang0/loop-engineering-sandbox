@@ -16,7 +16,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-  id-token: write   # required for claude-code-action OIDC auth. NOT issue write — stays L1.
+  # (no id-token needed — OpenCode uses a plain API key, not OIDC)
 
 jobs:
   triage:
@@ -36,21 +36,18 @@ jobs:
             --json number,title,author,updatedAt >> prs.json
           cat issues.json
 
-      # --- Agent step: INERT until you add the ANTHROPIC_API_KEY secret. ---
-      # Uncomment to activate. Runs one L1 triage pass and rewrites the state file.
+      # --- Agent step: OpenCode + GPT via aiohub gateway (OpenAI-compatible). ---
+      # Provider/model/apiKey are configured in opencode.json (provider "aiohub").
+      # Requires repo secret AIOHUB_API_KEY. Stays L1: bash denied, propose-only prompt.
+      - name: Install OpenCode
+        run: npm install -g opencode-ai
+
       - name: Run issue-triage loop (L1)
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          claude_args: "--model claude-code"   # gateway auto-routes this alias
-          prompt: |
-            Run one pass of the issue-triage skill in .claude/skills/issue-triage/SKILL.md.
-            Read issues.json and prs.json. Rewrite issue-triage-state.md and append one
-            block to loop-run-log.md. L1: propose only, never apply labels, escalate
-            P0/P1/security/breaking-change to the "Needs human" bucket.
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}   # third-party gateway (api.aiohub.org)
+          AIOHUB_API_KEY: ${{ secrets.AIOHUB_API_KEY }}
+        run: |
+          opencode run --agent issue-triage --model aiohub/gpt-4o \
+            "Run one L1 issue-triage pass now."
 
       - name: Upload triage state as artifact
         uses: actions/upload-artifact@v4
