@@ -49,6 +49,7 @@ jobs:
             P0/P1/security/breaking-change to the "Needs human" bucket.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}   # third-party gateway (api.aiohub.org)
 
       - name: Upload triage state as artifact
         uses: actions/upload-artifact@v4
